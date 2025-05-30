@@ -169,8 +169,28 @@ def minimax(board):
 
     if terminal(board):
         return None
+    
+    if player(board) == X:
 
-'''
+        my_actions = actions(board)
+
+        for action in my_actions:
+
+            board_action = result(board, action)
+            utility =  winner(board_action)
+            if utility == 1:
+                return action, utility
+            
+            
+            
+
+
+
+
+
+
+
+    '''
     if player(board) == X:
 
         my_possible_actions = actions(board)
