@@ -4,15 +4,12 @@ Tic Tac Toe Player
 
 import math
 import copy
+import random
 
 # Possíveis movimentos:
 X = "X"
 O = "O"
 EMPTY = None
-
-
-possible_moves = [0, 1, 2, 4, 5, 6, 7, 8]
-
 
 
 def initial_state():
@@ -28,8 +25,15 @@ def player(board):
     """
     Returns player who has the next turn on a board.
     """
+    X_marks = 0
+    O_marks = 0
 
-    return X if len(possible_moves)%2 == 0 else O
+    for l in range(len(board)):
+        X_marks += board[l].count("X")
+        O_marks += board[l].count("O")
+
+
+    return X if X_marks==O_marks else O
 
     raise NotImplementedError
 
@@ -58,16 +62,16 @@ def result(board, action):
 
     l, c = action
 
-    if board[l][c] is not EMPTY:
-        raise ValueError("Movimento inválido: A casa está ocupada")
-    
     if l >= len(board) or l < 0 or c >= len(board[l]) or c < 0:
         raise ValueError("Movimento inválido: fora dos limites do tabuleiro")
     
+    if board[l][c] is not EMPTY:
+        raise ValueError("Movimento inválido: A casa está ocupada")
+    
+    current_player = player(board)
+
     board_result = copy.deepcopy(board)
-    board_result[l][c] = player(board)
-
-
+    board_result[l][c] = current_player
 
     return board_result
 
@@ -148,13 +152,11 @@ def utility(board):
     raise NotImplementedError
 
 
-def minimax(board):
-    """
-    Returns the optimal action for the current player on the board.
-    """
 
     '''
-        Ver se a posição é terminal. Se sim, retona None
+    FUNÇÃO MINIMAX COM PODA ALFA BETA: 
+
+        Ver se a posição é terminal. Se sim, retorna None
 
         Verificar o jogador:
 
@@ -213,37 +215,145 @@ def minimax(board):
 
                     * OBS: A verificação de poda (ALFA >= BETA) é igual nas duas verificações!
 
-
-
-
-
-
-
-
-
-
-
+                    
+        OBSERVAÇÃO: MAIOR ALEATORIEDADE.
+            > Optei por adicionar todas as best actions em uma lista, e retornar uma delas aleatoriamente.
+            > Isso pq a lógica estava sempre começando na primeira casa [0][0], o que ficava chato.
+            > Ele encontrava essa opção ao percorrer as actions, e nunca a atualizava, pois todas as demais eram iguais.
+            > Assim, se existem mais de uma best_action, a lógica poderá jogar em resultados distintos.
+            > Dito isso, a atualização "if action_utility > max_utility: best_action = [action]" é feita dessa maneira
+              para resetar a lista de best actions anteriores, caso ele encontre um cenário com maior utilidade.
     '''
 
 
+def minimax(board):
+    """
+    Returns the optimal action for the current player on the board.
+    """
+
     if terminal(board):
         return None
-    
-    if player(board) == X:
 
+
+
+    actual_player = player(board)
+
+    if actual_player == X:
+
+        best_action = []
+        max_utility = -math.inf
+        alfa = -math.inf
+        beta = math.inf
+
+        
         my_actions = actions(board)
 
         for action in my_actions:
 
-            board_action = result(board, action)
-            utility =  winner(board_action)
-            if utility == 1:
-                return action, utility
-            
-            
-            
+            action_result = result(board, action)
+            action_utility = min_function (action_result, alfa, beta)
+
+            if action_utility > max_utility:
+                max_utility = action_utility 
+                best_action = [action]
+
+            if action_utility == max_utility:
+                best_action.append(action)
 
 
+            if action_utility > alfa:
+                alfa = action_utility 
+
+            if alfa > beta:
+                break
+                
+        return random.choice(best_action)
+    
+
+
+    elif actual_player == O:
+
+        best_action= []
+        min_utility = math.inf
+        alfa = -math.inf
+        beta = math.inf
+
+        my_actions = actions(board)
+
+        for action in my_actions:
+            
+            action_result = result(board, action)
+            action_utility = max_function (action_result, alfa, beta)
+
+            if action_utility < min_utility:
+                min_utility = action_utility
+                best_action = [action]
+            
+            if action_utility == min_utility:
+                best_action.append(action)
+
+            if action_utility < beta:
+                beta = action_utility
+
+            if alfa > beta:
+                break
+        
+        return random.choice(best_action)
+
+            
+        
+def max_function (board, alfa, beta):
+    
+    if terminal(board):
+        return utility(board)
+    
+    node_utility = -math.inf
+    node_alfa = alfa
+
+    node_actions = actions(board)
+
+    for action in node_actions:
+        
+        action_result = result(board, action)
+        action_utility = min_function(action_result, node_alfa, beta)
+
+        if action_utility > node_utility:
+            node_utility = action_utility 
+
+        if action_utility > node_alfa:
+            node_alfa = action_utility
+
+        if node_alfa > beta:
+            break
+
+    return node_utility
+
+
+
+def min_function (board, alfa, beta):
+    
+    if terminal(board):
+        return utility(board)
+    
+    node_utility = +math.inf
+    node_beta = beta
+
+    node_actions = actions(board)
+    for action in node_actions:
+        
+        action_result = result(board, action)
+        action_utility = max_function(action_result, alfa, node_beta)
+
+        if action_utility < node_utility:
+            node_utility = action_utility 
+
+        if action_utility < node_beta:
+            node_beta = action_utility
+
+        if alfa > node_beta:
+            break
+
+    return node_utility
 
 
 
@@ -294,25 +404,3 @@ def minimax(board):
         return my_possible_actions[max_util]
         
 '''
-
-            
-
-
-
-
-
-            
-
-
-
-    raise NotImplementedError
-
-
-
-
-
-# inicio = initial_state()
-# print(player(inicio))
-# print(actions(inicio))
-# print(result(inicio,(0,2)))
-# print(f'{inicio}')
