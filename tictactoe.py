@@ -44,7 +44,7 @@ def actions(board):
     for l in range(len(board)):
         for c in range(len(board[l])):
             if board[l][c] == EMPTY:
-                possible_actions.append(l, c)
+                possible_actions.append((l, c))
 
     return possible_actions
     
@@ -61,7 +61,7 @@ def result(board, action):
     if board[l][c] is not EMPTY:
         raise ValueError("Movimento inválido: A casa está ocupada")
     
-    if l >= len(board) or l <= 0 or c >= len(board[l]) or c < 0:
+    if l >= len(board) or l < 0 or c >= len(board[l]) or c < 0:
         raise ValueError("Movimento inválido: fora dos limites do tabuleiro")
     
     board_result = copy.deepcopy(board)
@@ -154,18 +154,77 @@ def minimax(board):
     """
 
     '''
-        buscar as minhas ações
+        Ver se a posição é terminal. Se sim, retona None
 
-        Para cada ação, buscar as ações adversárias
+        Verificar o jogador:
 
-            para cada ação adversária, 
-                ver o resultado.
-                salvar a utilidade em um conjunto
-        
-        descobrir as ações válidas através do máximo valor mínimo
-        
-        
+            Se for X (busca maior valor):
+
+                Inicializar:
+                    VALOR_MÁXIMO como -infinito (qualquer ganho é lucro)
+
+                Inicializar:
+                    ALFA (-inf)  - melhor pontuação que X pode garantir até agora
+                    BETA (+inf)  - melhor pontuação que Y pode garantir até agora
+
+
+                define as jogadas possíveis. Para cada jogada:
+
+                    Simula o tabuleiro
+
+                    Roda a função que busca MÁXIMO_VALOR, passando (TABULEIRO,  ALFA e BETA), que retornará (Valor da utility e Melhor Jogada)
+
+                        > Verifica se o tabuleiro é terminal, 
+                            >> se sim retorna 
+                                >> sua utility  (1, 0 , -1)
+                                >> None para a jogada.
+                            
+                            >> não tendo sido retornado, continua...
+                            
+                            >> define o valor como - infinito
+                            >> define a melhor jogada como None (ainda não descobrimos)
+
+                                >> busca as ações adversárias, 
+                                >> simula o tabuleiro 
+                                >> roda a função que retorna MÍNIMO_VALOR , com os mesmos ALFA E BETA
+                        
+                    Analisar o retorno: 
+                        > Se o valor do retorno for que o VALOR_MÁXIMO, atualiza o valor máximo
+                        > Se o valor do retorno for maior ALFA, atualiza ALFA 
+                        > Se o ALFA >= BETA, faz a poda interrompendo o loop (break)
+                            Obs:  - o loop continuará até que todas as jogadas sejam avaliadas ou até que a poda ocorra. 
+                                  - No final, teremos o melhor valor possível para X.
+                    
+
+            Se for O (busca o menor valor)
+
+                (Idem, exceto que... )
+                    * Inicializa como MÍNIMO_VALOR, que começará com +infinito (qualquer redução é lucro)
+                    * Obs: ALFA E BETA são inicializados igualmente, pois são relativos aos jogadores (e não ao "jogador atual")
+
+                    * Roda a função de MÍNIMO VALOR (idem à máximo valor, exceto que...)
+
+                    * Ao comparar o resultado, busca o menor valor
+
+                        ** Chama recursivamente a função do adversário (agora com MAX)
+                        ** Se o valor retornado for menor que VALOR_MÍNIMO, atualiza
+                        ** Se o valor retornado for menor que BETA, atualiza
+                        ** Se ALFA >= BETA, faz a poda e encerra o loop
+
+                    * OBS: A verificação de poda (ALFA >= BETA) é igual nas duas verificações!
+
+
+
+
+
+
+
+
+
+
+
     '''
+
 
     if terminal(board):
         return None
@@ -189,7 +248,19 @@ def minimax(board):
 
 
 
+    '''
+        buscar as minhas ações
 
+        Para cada ação, buscar as ações adversárias
+
+            para cada ação adversária, 
+                ver o resultado.
+                salvar a utilidade em um conjunto
+        
+        descobrir as ações válidas através do máximo valor mínimo
+        
+        
+    '''
     '''
     if player(board) == X:
 
